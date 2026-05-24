@@ -1,10 +1,664 @@
-﻿<!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="zh-CN">
 <head>
-  <meta http-equiv="refresh" content="0; url=web/index.html">
-  <title>校园学时管理系统</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校园学时管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a5276, #2e86c1);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 { font-size: 28px; margin-bottom: 8px; }
+        .header p { font-size: 14px; opacity: 0.85; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-radius: 10px 10px 0 0;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .nav-tab {
+            flex: 1;
+            padding: 14px 10px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        .nav-tab:hover { background: #f8f9fa; }
+        .nav-tab.active {
+            color: #2e86c1;
+            border-bottom-color: #2e86c1;
+            background: #f8fbff;
+        }
+        .tab-content {
+            background: white;
+            border-radius: 0 0 10px 10px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-height: 400px;
+        }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        /* 申请表单 */
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #d0d5dd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #2e86c1;
+            box-shadow: 0 0 0 3px rgba(46,134,193,0.15);
+        }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-row { display: flex; gap: 20px; }
+        .form-row .form-group { flex: 1; }
+
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: #2e86c1; color: white; }
+        .btn-primary:hover { background: #1a5276; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-success:hover { background: #1e8449; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn-warning:hover { background: #d68910; }
+        .btn-secondary { background: #95a5a6; color: white; }
+        .btn-secondary:hover { background: #7f8c8d; }
+
+        /* 表格 */
+        .table-wrap { overflow-x: auto; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid #e8eaed;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+        tr:hover { background: #f8fbff; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-pending { background: #fff3cd; color: #856404; }
+        .badge-approved { background: #d4edda; color: #155724; }
+        .badge-rejected { background: #f8d7da; color: #721c24; }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 18px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-card .num {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2e86c1;
+        }
+        .stat-card .label {
+            font-size: 13px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .result-box {
+            margin-top: 15px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .result-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .result-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        .status-bar {
+            padding: 12px;
+            margin-bottom: 16px;
+            background: #eaf2f8;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #1a5276;
+        }
+        .status-bar strong { font-weight: 700; }
+
+        @media (max-width: 768px) {
+            .form-row { flex-direction: column; gap: 0; }
+            .nav-tab { font-size: 13px; padding: 10px 6px; }
+        }
+    </style>
 </head>
 <body>
-  <p>正在跳转... <a href="web/index.html">点击进入校园学时管理系统</a></p>
+
+<div class="header">
+    <h1>📚 校园学时管理系统</h1>
+    <p>Campus Hours Management System — 在线申请 · 高效审核 · 数据统计</p>
+</div>
+
+<div class="container">
+    <!-- 状态栏 -->
+    <div class="status-bar">
+        <strong>👤 当前用户：</strong>
+        <select id="currentUser" onchange="switchUser()">
+            <option value="student1">张三（学生 · 信管2101）</option>
+            <option value="student2">李四（学生 · 信管2101）</option>
+            <option value="admin">管理员（管理员）</option>
+        </select>
+        <span style="margin-left: 20px;"><strong>🔑 角色：</strong><span id="currentRole">学生</span></span>
+    </div>
+
+    <!-- 导航标签 -->
+    <div class="nav-tabs">
+        <div class="nav-tab active" onclick="switchTab(this, 'apply')">📝 申请学时</div>
+        <div class="nav-tab" onclick="switchTab(this, 'list')">📋 申请记录</div>
+        <div class="nav-tab" onclick="switchTab(this, 'review')">✅ 审核管理</div>
+        <div class="nav-tab" onclick="switchTab(this, 'stats')">📊 统计看板</div>
+        <div class="nav-tab" onclick="switchTab(this, 'test')">🧪 测试验证</div>
+    </div>
+
+    <!-- 内容区 -->
+    <div class="tab-content">
+
+        <!-- ==================== 申请学时 ==================== -->
+        <div id="tab-apply" class="tab-pane active">
+            <h2 style="margin-bottom:20px;">📝 提交学时申请</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>活动名称 *</label>
+                    <input type="text" id="activityName" placeholder="请输入活动名称（限200字符）" maxlength="200">
+                </div>
+                <div class="form-group">
+                    <label>活动类型 *</label>
+                    <select id="activityType">
+                        <option value="academic">学术科研</option>
+                        <option value="sports">体育文体</option>
+                        <option value="volunteer">志愿服务</option>
+                        <option value="competition">竞赛活动</option>
+                        <option value="lecture">讲座培训</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>申请学时 *</label>
+                    <input type="number" id="applyHours" placeholder="0.5 ~ 50（0.5的倍数）" step="0.5" min="0.5" max="50">
+                </div>
+                <div class="form-group">
+                    <label>附件（可选）</label>
+                    <input type="text" id="attachment" placeholder="附件文件名，如: 证明.pdf">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>活动描述</label>
+                <textarea id="activityDesc" placeholder="简要描述活动内容与参与情况..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="submitApplication()">提交申请</button>
+            <div id="submitResult"></div>
+        </div>
+
+        <!-- ==================== 申请记录 ==================== -->
+        <div id="tab-list" class="tab-pane">
+            <h2 style="margin-bottom:16px;">📋 我的申请记录</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>申请人</th>
+                            <th>活动名称</th>
+                            <th>类型</th>
+                            <th>学时</th>
+                            <th>状态</th>
+                            <th>审核意见</th>
+                            <th>提交时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="applicationList"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ==================== 审核管理 ==================== -->
+        <div id="tab-review" class="tab-pane">
+            <h2 style="margin-bottom:16px;">✅ 审核管理 <span style="font-size:13px;color:#888;font-weight:400;">（仅管理员可用）</span></h2>
+            <div id="reviewAdminMsg" style="padding:12px;background:#fff3cd;border-radius:8px;margin-bottom:16px;display:none;">
+                ⚠️ 当前用户非管理员，无法进行审核操作
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>申请人</th>
+                            <th>活动名称</th>
+                            <th>类型</th>
+                            <th>学时</th>
+                            <th>当前状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reviewList"></tbody>
+                </table>
+            </div>
+            <div id="reviewResult"></div>
+        </div>
+
+        <!-- ==================== 统计看板 ==================== -->
+        <div id="tab-stats" class="tab-pane">
+            <h2 style="margin-bottom:16px;">📊 学时统计</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="num" id="statTotal">0</div>
+                    <div class="label">总申请数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num" id="statPending" style="color:#f39c12;">0</div>
+                    <div class="label">待审核</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num" id="statApproved" style="color:#27ae60;">0</div>
+                    <div class="label">已通过</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num" id="statRejected" style="color:#e74c3c;">0</div>
+                    <div class="label">已驳回</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num" id="statHours" style="color:#8e44ad;">0</div>
+                    <div class="label">总学时</div>
+                </div>
+            </div>
+            <h3 style="margin:20px 0 12px;">📈 各类型学时分布</h3>
+            <div id="typeDistribution" style="display:flex;flex-wrap:wrap;gap:12px;"></div>
+        </div>
+
+        <!-- ==================== 测试验证 ==================== -->
+        <div id="tab-test" class="tab-pane">
+            <h2 style="margin-bottom:16px;">🧪 系统功能测试</h2>
+            <p style="color:#666;margin-bottom:16px;">点击下方按钮运行测试套件，验证系统的各项功能是否正常。</p>
+            <button class="btn btn-primary" onclick="runTests()">🚀 运行全部测试</button>
+            <button class="btn btn-secondary" onclick="clearTestResults()" style="margin-left:10px;">清空结果</button>
+            <div id="testResults" style="margin-top:16px;"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// ============================================================
+// 数据层
+// ============================================================
+const users = {
+    student1: { id: 1, name: "张三", role: "student", className: "信管2101" },
+    student2: { id: 2, name: "李四", role: "student", className: "信管2101" },
+    admin:    { id: 3, name: "管理员", role: "admin", className: "" }
+};
+
+const VALID_TYPES = ["academic", "sports", "volunteer", "competition", "lecture", "other"];
+const TYPE_NAMES = {
+    academic: "📖 学术科研", sports: "🏃 体育文体",
+    volunteer: "🤝 志愿服务", competition: "🏆 竞赛活动",
+    lecture: "🎓 讲座培训", other: "📌 其他"
+};
+const ALLOWED_EXT = ["pdf","jpg","jpeg","png","doc","docx"];
+
+// 模拟数据库
+let applications = [];
+let appIdCounter = 1;
+
+// 预置数据
+function initData() {
+    const apps = [
+        { applicantId: 1, activityName: "数据结构学术竞赛", activityType: "competition", hours: 8, description: "参加校级数据结构竞赛并获三等奖" },
+        { applicantId: 1, activityName: "校园马拉松志愿者", activityType: "volunteer", hours: 4, description: "担任校园马拉松赛道引导志愿者" },
+        { applicantId: 2, activityName: "Python编程讲座", activityType: "lecture", hours: 2, description: "参加学院组织的Python数据分析讲座" },
+        { applicantId: 2, activityName: "院运动会800米", activityType: "sports", hours: 3, description: "参加院运动会800米项目" },
+        { applicantId: 1, activityName: "机器学习研讨会", activityType: "academic", hours: 6, description: "参加机器学习暑期研讨班" },
+        { applicantId: 1, activityName: "社区环保活动", activityType: "volunteer", hours: 3.5, description: "社区环保宣传与垃圾分类" },
+    ];
+    apps.forEach((a, i) => {
+        applications.push({
+            id: appIdCounter++,
+            applicantId: a.applicantId,
+            applicantName: users[a.applicantId === 1 ? "student1" : "student2"].name,
+            activityName: a.activityName,
+            activityType: a.activityType,
+            hours: a.hours,
+            description: a.description,
+            attachmentUrl: "",
+            status: i === 0 ? "pending" : (i % 3 === 1 ? "approved" : i % 3 === 2 ? "rejected" : "pending"),
+            reviewerName: null,
+            reviewComment: null,
+            createdAt: new Date(Date.now() - (6 - i) * 86400000).toLocaleString()
+        });
+    });
+}
+initData();
+
+function getCurrentUser() {
+    const sel = document.getElementById("currentUser").value;
+    return users[sel];
+}
+
+// ============================================================
+// 通用函数
+// ============================================================
+function switchTab(el, tabName) {
+    document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
+    el.classList.add("active");
+    document.getElementById("tab-" + tabName).classList.add("active");
+    if (tabName === "list") renderApplicationList();
+    if (tabName === "review") renderReviewList();
+    if (tabName === "stats") renderStats();
+}
+
+function switchUser() {
+    const user = getCurrentUser();
+    document.getElementById("currentRole").textContent = user.role === "admin" ? "管理员" : "学生";
+    if (document.getElementById("tab-review").classList.contains("active")) renderReviewList();
+}
+
+function showResult(containerId, success, msg) {
+    const el = document.getElementById(containerId);
+    el.innerHTML = `<div class="result-box ${success ? 'result-success' : 'result-error'}">${success ? '✅' : '❌'} ${msg}</div>`;
+}
+
+// 校验逻辑（与Java后端一致）
+function validateApplication(user, activityName, activityType, hours, attachmentUrl) {
+    let errors = [];
+    if (!user) { errors.push("用户未登录"); return errors; }
+    if (user.role !== "student") { errors.push("非学生用户不能提交申请"); return errors; }
+    if (!activityName || !activityName.trim()) { errors.push("活动名称不能为空"); }
+    else if (activityName.trim().length > 200) { errors.push("活动名称不能超过200字符"); }
+    if (!VALID_TYPES.includes(activityType)) { errors.push("无效的活动类型"); }
+    if (hours == null || isNaN(hours)) { errors.push("学时数不能为空"); }
+    else {
+        let h = parseFloat(hours);
+        if (h < 0.5) errors.push("学时数不能小于0.5");
+        else if (h > 50) errors.push("学时数不能大于50");
+        else if (Math.abs(h % 0.5) > 0.001) errors.push("学时数必须是0.5的倍数");
+    }
+    if (attachmentUrl && attachmentUrl.trim()) {
+        let ext = attachmentUrl.split('.').pop().toLowerCase();
+        if (!ALLOWED_EXT.includes(ext)) errors.push(`不支持的附件格式：.${ext}`);
+    }
+    return errors;
+}
+
+// ============================================================
+// 申请学时
+// ============================================================
+function submitApplication() {
+    const user = getCurrentUser();
+    const name = document.getElementById("activityName").value;
+    const type = document.getElementById("activityType").value;
+    const hours = document.getElementById("applyHours").value;
+    const desc = document.getElementById("activityDesc").value;
+    const attach = document.getElementById("attachment").value;
+
+    const errors = validateApplication(user, name, type, hours, attach);
+    if (errors.length > 0) {
+        showResult("submitResult", false, errors.join("；"));
+        return;
+    }
+
+    const app = {
+        id: appIdCounter++,
+        applicantId: user.id,
+        applicantName: user.name,
+        activityName: name.trim(),
+        activityType: type,
+        hours: parseFloat(hours),
+        description: desc || "",
+        attachmentUrl: attach || "",
+        status: "pending",
+        reviewerName: null,
+        reviewComment: null,
+        createdAt: new Date().toLocaleString()
+    };
+    applications.push(app);
+    showResult("submitResult", true, `申请成功！"${app.activityName}"（${app.hours}小时）已提交，等待管理员审核。`);
+    document.getElementById("activityName").value = "";
+    document.getElementById("applyHours").value = "";
+    document.getElementById("activityDesc").value = "";
+    document.getElementById("attachment").value = "";
+}
+
+// ============================================================
+// 申请记录列表
+// ============================================================
+function renderApplicationList() {
+    const user = getCurrentUser();
+    const tbody = document.getElementById("applicationList");
+    const userApps = applications.filter(a => a.applicantId === user.id || user.role === "admin");
+    if (userApps.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:30px;">暂无申请记录</td></tr>';
+        return;
+    }
+    tbody.innerHTML = userApps.map(a => {
+        const badge = {
+            pending: '<span class="badge badge-pending">⏳ 待审核</span>',
+            approved: '<span class="badge badge-approved">✅ 已通过</span>',
+            rejected: '<span class="badge badge-rejected">❌ 已驳回</span>'
+        }[a.status];
+        return `<tr>
+            <td>${a.applicantName}</td>
+            <td>${a.activityName}</td>
+            <td>${TYPE_NAMES[a.activityType] || a.activityType}</td>
+            <td>${a.hours}</td>
+            <td>${badge}</td>
+            <td>${a.reviewComment || "-"}</td>
+            <td>${a.createdAt}</td>
+        </tr>`;
+    }).join("");
+}
+
+// ============================================================
+// 审核管理
+// ============================================================
+function renderReviewList() {
+    const user = getCurrentUser();
+    const msg = document.getElementById("reviewAdminMsg");
+    const tbody = document.getElementById("reviewList");
+    const resultDiv = document.getElementById("reviewResult");
+
+    if (user.role !== "admin") {
+        msg.style.display = "block";
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999;padding:30px;">请切换为管理员账号查看待审核列表</td></tr>';
+        return;
+    }
+    msg.style.display = "none";
+
+    const pendingApps = applications.filter(a => a.status === "pending");
+    if (pendingApps.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#27ae60;padding:30px;">✅ 暂无待审核的申请</td></tr>';
+        return;
+    }
+    tbody.innerHTML = pendingApps.map(a => `<tr>
+        <td>${a.applicantName}</td>
+        <td>${a.activityName}</td>
+        <td>${TYPE_NAMES[a.activityType] || a.activityType}</td>
+        <td>${a.hours}</td>
+        <td><span class="badge badge-pending">⏳ 待审核</span></td>
+        <td>
+            <button class="btn btn-success btn-sm" style="padding:5px 12px;font-size:12px;" onclick="reviewApp(${a.id}, true)">通过</button>
+            <button class="btn btn-danger btn-sm" style="padding:5px 12px;font-size:12px;" onclick="reviewApp(${a.id}, false)">驳回</button>
+        </td>
+    </tr>`).join("");
+}
+
+function reviewApp(appId, approved) {
+    const user = getCurrentUser();
+    if (user.role !== "admin") {
+        showResult("reviewResult", false, "只有管理员才能审核");
+        return;
+    }
+    const app = applications.find(a => a.id === appId);
+    if (!app) { showResult("reviewResult", false, "申请不存在"); return; }
+    if (app.status !== "pending") { showResult("reviewResult", false, "该申请已审核，不能重复操作"); return; }
+
+    const comment = prompt(`请输入审核意见（${approved ? "通过" : "驳回"}）:`, approved ? "活动符合要求，同意通过" : "活动材料不充分，请补充后重新提交");
+    if (comment === null) return;
+
+    app.status = approved ? "approved" : "rejected";
+    app.reviewerName = user.name;
+    app.reviewComment = comment;
+    showResult("reviewResult", true, `审核完成：${approved ? "✅ 已通过" : "❌ 已驳回"} - ${comment}`);
+    renderReviewList();
+}
+
+// ============================================================
+// 统计看板
+// ============================================================
+function renderStats() {
+    const total = applications.length;
+    const pending = applications.filter(a => a.status === "pending").length;
+    const approved = applications.filter(a => a.status === "approved").length;
+    const rejected = applications.filter(a => a.status === "rejected").length;
+    const totalHours = applications.filter(a => a.status === "approved").reduce((s, a) => s + a.hours, 0);
+
+    document.getElementById("statTotal").textContent = total;
+    document.getElementById("statPending").textContent = pending;
+    document.getElementById("statApproved").textContent = approved;
+    document.getElementById("statRejected").textContent = rejected;
+    document.getElementById("statHours").textContent = totalHours.toFixed(1);
+
+    // 按类型分布
+    const typeData = {};
+    applications.filter(a => a.status === "approved").forEach(a => {
+        typeData[a.activityType] = (typeData[a.activityType] || 0) + a.hours;
+    });
+    const distEl = document.getElementById("typeDistribution");
+    if (Object.keys(typeData).length === 0) {
+        distEl.innerHTML = '<p style="color:#999;">暂无已通过的学时数据</p>';
+        return;
+    }
+    distEl.innerHTML = Object.entries(typeData).map(([type, hours]) => {
+        const percent = (hours / totalHours * 100).toFixed(1);
+        const colorMap = { academic: "#3498db", sports: "#e67e22", volunteer: "#27ae60", competition: "#e74c3c", lecture: "#9b59b6", other: "#95a5a6" };
+        return `<div style="flex:1;min-width:150px;background:#f8f9fa;padding:14px;border-radius:10px;border-left:4px solid ${colorMap[type] || '#ccc'}">
+            <div style="font-size:13px;color:#666;">${TYPE_NAMES[type] || type}</div>
+            <div style="font-size:24px;font-weight:700;margin:4px 0;">${hours.toFixed(1)} <span style="font-size:13px;color:#888;">小时</span></div>
+            <div style="font-size:12px;color:#aaa;">占比 ${percent}%</div>
+        </div>`;
+    }).join("");
+}
+
+// ============================================================
+// 测试验证
+// ============================================================
+function runTests() {
+    let passed = 0, failed = 0;
+    const results = [];
+    const user1 = users.student1;
+    const user2 = users.student2;
+    const adminUser = users.admin;
+
+    function test(name, condition) {
+        if (condition) { passed++; results.push(`  <span style="color:#27ae60;">✓</span> ${name}`); }
+        else { failed++; results.push(`  <span style="color:#e74c3c;">✗</span> ${name} [失败]`); }
+    }
+
+    // 测试1: 正常提交
+    test("学生正常提交申请", validateApplication(user1, "Python讲座", "lecture", 2.0, "cert.pdf").length === 0);
+    test("体育类提交成功", validateApplication(user1, "运动会", "sports", 3.0, "").length === 0);
+
+    // 测试2: 边界值
+    test("最小学时0.5", validateApplication(user1, "晨跑", "sports", 0.5, "").length === 0);
+    test("最大学时50", validateApplication(user1, "国赛", "competition", 50, "").length === 0);
+    test("小于0.5拒绝", validateApplication(user1, "小活动", "other", 0.1, "").length > 0);
+    test("大于50拒绝", validateApplication(user1, "国际会议", "academic", 55, "").length > 0);
+    test("非0.5倍数拒绝", validateApplication(user1, "测试", "other", 1.2, "").length > 0);
+
+    // 测试3: 异常输入
+    test("空活动名拒绝", validateApplication(user1, "", "lecture", 2.0, "").length > 0);
+    test("无效类型拒绝", validateApplication(user1, "测试", "hiking", 2.0, "").length > 0);
+    test("不支持附件格式", validateApplication(user1, "报告", "academic", 2.0, "report.exe").length > 0);
+    test("管理员不能提交", validateApplication(adminUser, "测试", "lecture", 2.0, "").length > 0);
+
+    // 测试4: 审核流程
+    test("审核通过", applications.filter(a => a.status === "approved").length > 0);
+    test("审核驳回", applications.filter(a => a.status === "rejected").length > 0);
+
+    // 测试5: 统计
+    const total = applications.length;
+    const approvedCount = applications.filter(a => a.status === "approved").length;
+    const pendingCount = applications.filter(a => a.status === "pending").length;
+    const rejectedCount = applications.filter(a => a.status === "rejected").length;
+    test("统计总数正确", total === approvedCount + pendingCount + rejectedCount);
+
+    // 渲染结果
+    const totalTests = passed + failed;
+    const rate = ((passed / totalTests) * 100).toFixed(1);
+    const el = document.getElementById("testResults");
+    el.innerHTML = `
+        <div style="background:#f0f2f5;padding:16px;border-radius:10px;margin-bottom:16px;">
+            <strong>测试结果：</strong> 通过 ${passed} / ${totalTests}（${rate}%） ${failed === 0 ? '🎉 全部通过！' : `❌ ${failed} 个失败`}
+            <div style="margin-top:10px;background:#e8eaed;height:8px;border-radius:4px;overflow:hidden;">
+                <div style="background:${failed === 0 ? '#27ae60' : '#e74c3c'};width:${rate}%;height:100%;"></div>
+            </div>
+        </div>
+        <div style="font-family:monospace;font-size:13px;line-height:1.8;background:#1a1a2e;color:#e0e0e0;padding:16px;border-radius:8px;max-height:500px;overflow-y:auto;">
+            ${results.join('<br>')}
+        </div>
+    `;
+}
+
+function clearTestResults() {
+    document.getElementById("testResults").innerHTML = "";
+}
+</script>
+
 </body>
 </html>
